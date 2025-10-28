@@ -14,14 +14,13 @@ app = FastAPI(title="Vendor Manager", version="0.1.0")
 async def read_root():
     return {"message": "Приложение запущено"}
 
+@app.get("/test")
+async def read_root():
+    return {"status": "success"}
+
 
 # Пример отдельного роутера для группировки эндпоинтов (например /api)
 api_router = APIRouter(prefix="/api", tags=["api"])
-
-
-class Item(BaseModel):
-    id: int
-    name: str
 
 
 
