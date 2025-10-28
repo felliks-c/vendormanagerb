@@ -1,0 +1,30 @@
+name: CI
+
+on: [push, pull_request]
+
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        permissions:
+          contents: read
+          packages: write
+
+        steps:
+        - uses: actions/checkout@v4
+        - name: Login to Github container registry
+          uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+        - name: Bild and push docker image
+          uses: docker/build-push-action@v6
+          with:
+            context: .
+            file: Dockerfile
+            push: true
+            tags: |
+                ghcr.io/${{ github.repository_owner }}/vendormanagerb:latest
+                ghcr.io/${{ github.repository_owner }}/vendormanagerb:${{ github.sha }}
