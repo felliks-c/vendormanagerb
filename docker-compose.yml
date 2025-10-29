@@ -1,0 +1,19 @@
+service:
+  vendormanagerb:
+    container_name: vendormanagerb_container
+    image: ghcr.io/felliks-c/vendormanagerb:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+  
+  watchtower:
+    container_name: watchtower_container
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --cleanup --interval 300 vendormanagerb_container
+    restart: always
+  

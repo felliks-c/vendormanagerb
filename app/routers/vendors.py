@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import asyncio
 
 # Импорт вашей конфигурации:
 #from database import get_db # Предполагаем, что database.py на один уровень выше
@@ -20,7 +21,7 @@ router = APIRouter(
 # 1. POST /vendors/ (CREATE) - Создание нового поставщика
 # ==============================================================================
 @router.post("/", response_model=schemas.Vendor, status_code=status.HTTP_201_CREATED)
-def create_vendor_endpoint(vendor: schemas.VendorCreate):
+async def create_vendor_endpoint(vendor: schemas.VendorCreate):
     """
     Создает нового поставщика в базе данных.
     """
@@ -31,8 +32,10 @@ def create_vendor_endpoint(vendor: schemas.VendorCreate):
     #         status_code=status.HTTP_400_BAD_REQUEST, 
     #         detail="Email already registered"
     #     )
+
+    
         
-    return create_vendor(db=db, vendor=vendor)
+    return await create_vendor(db=db, vendor=vendor)
 
 # ==============================================================================
 # 2. GET /vendors/ (READ ALL) - Получение списка поставщиков
