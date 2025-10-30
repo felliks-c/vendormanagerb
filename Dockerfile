@@ -27,4 +27,4 @@ ENV PYTHONPATH=/code
 EXPOSE 3000
 
 # --- 7. Запуск через uvicorn --
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["uvicorn", "m", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]
