@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=3000
-WORKDIR /app
+WORKDIR /
 
 # --- 4. Установка зависимостей ---
 COPY requirements.txt .
