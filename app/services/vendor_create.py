@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
-from models import Vendor
-from schemas import VendorCreate
+from app.models import Vendor
+from app.schemas import VendorCreate
 
-def create_vendor(db: Session, vendor: schemas.VendorCreate) -> models.Vendor:
+def create_vendor(db: Session, vendor: VendorCreate) -> Vendor:
     """
     Создает и сохраняет новый объект Vendor в базе данных.
     """
     # Создаем экземпляр модели Vendor из данных Pydantic схемы
-    db_vendor = models.Vendor(
+    db_vendor = Vendor(
         name=vendor.name,
         contactEmail=vendor.contactEmail,
         category=vendor.category,

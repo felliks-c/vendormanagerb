@@ -5,9 +5,9 @@ import asyncio
 
 # Импорт вашей конфигурации:
 #from database import get_db # Предполагаем, что database.py на один уровень выше
-from .. import schemas 
+from app.schemas import Vendor, VendorCreate, VendorUpdate, VendorBase
 # Импорт функций CRUD из вашего модуля vendors
-from vendors import create_vendor, get_vendors, update_vendor, delete_vendor 
+from app.services import create_vendor, get_vendors, update_vendor, delete_vendor 
 # Также нужен импорт модели, если вы хотите искать по ней, но здесь он не обязателен
 # from .. import models 
 
@@ -20,8 +20,8 @@ router = APIRouter(
 # ==============================================================================
 # 1. POST /vendors/ (CREATE) - Создание нового поставщика
 # ==============================================================================
-@router.post("/", response_model=schemas.Vendor, status_code=status.HTTP_201_CREATED)
-async def create_vendor_endpoint(vendor: schemas.VendorCreate):
+@router.post("/", response_model=Vendor, status_code=status.HTTP_201_CREATED)
+async def create_vendor_endpoint(vendor: VendorCreate):
     """
     Создает нового поставщика в базе данных.
     """
@@ -40,7 +40,7 @@ async def create_vendor_endpoint(vendor: schemas.VendorCreate):
 # ==============================================================================
 # 2. GET /vendors/ (READ ALL) - Получение списка поставщиков
 # ==============================================================================
-@router.get("/", response_model=List[schemas.Vendor])
+@router.get("/", response_model=List[Vendor])
 def read_vendors_endpoint(skip: int = 0, limit: int = 100):
     """
     Возвращает список всех поставщиков с пагинацией.
@@ -50,8 +50,8 @@ def read_vendors_endpoint(skip: int = 0, limit: int = 100):
 # ==============================================================================
 # 3. PUT /vendors/{vendor_id} (UPDATE) - Обновление данных поставщика
 # ==============================================================================
-@router.put("/{vendor_id}", response_model=schemas.Vendor)
-def update_vendor_endpoint(vendor_id: int, vendor_data: schemas.VendorUpdate):
+@router.put("/{vendor_id}", response_model=Vendor)
+def update_vendor_endpoint(vendor_id: int, vendor_data: VendorUpdate):
     """
     Обновляет данные поставщика по его ID.
     """
