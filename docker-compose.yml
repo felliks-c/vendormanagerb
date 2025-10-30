@@ -1,4 +1,4 @@
-service:
+services:
   vendormanagerb:
     container_name: vendormanagerb_container
     image: ghcr.io/felliks-c/vendormanagerb:latest
@@ -16,4 +16,3 @@ service:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --cleanup --interval 300 vendormanagerb_container
     restart: always
-  
