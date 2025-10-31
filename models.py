@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float
 # Предполагаем, что Base импортируется из вашего файла database.py
-from .database import Base 
+from database import Base 
 
 class Vendor(Base):
     __tablename__ = "vendors"
