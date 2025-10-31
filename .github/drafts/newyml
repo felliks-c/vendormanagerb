@@ -1,0 +1,107 @@
+deploy:
+  name: Deploy to Server
+  runs-on: ubuntu-latest
+  needs: build
+
+  steps:
+    - name: Connect via SSH and Deploy
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: 22
+        script: |
+          echo "[INFO] Logging into GHCR..."
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+          echo "[INFO] Pulling latest image..."
+          docker pull ghcr.io/${{ github.repository_owner }}/vendormanagerb:latest
+
+          echo "[INFO] Starting temporary container for test..."
+          docker run -d \
+            --name vendormanagerb_temp \
+            -p 3001:3000 \
+            -v /etc/secrets/vendormanagerb.pem:/run/secrets/vendormanagerb.pem:ro \
+            -e PRIVATE_KEY_PATH=/run/secrets/vendormanagerb.pem \
+            ghcr.io/${{ github.repository_owner }}/vendormanagerb:latest
+
+          echo "[INFO] Waiting for app to initialize..."
+          sleep 8
+
+          echo "[INFO] Sending test request..."
+          RESPONSE=$(curl -s http://localhost:3001/test || echo "fail")
+
+          if echo "$RESPONSE" | grep -q '"status"\s*:\s*"success"'; then
+            echo "[INFO] Test passed. Replacing old container..."
+
+            docker stop vendormanagerb_old || true
+            docker rm vendormanagerb_old || true
+
+            echo "[INFO] Restarting new container on port 3000..."
+            docker stop vendormanagerb_temp || true
+            docker rm vendormanagerb_temp || true
+            docker run -d \
+              --name vendormanagerb_old \
+              -p 3000:3000 \
+              -v /etc/secrets/vendormanagerb.pem:/run/secrets/vendormanagerb.pem:ro \
+              -e PRIVATE_KEY_PATH=/run/secrets/vendormanagerb.pem \
+              ghcr.io/${{ github.repository_owner }}/vendormanagerb:latest
+
+            echo "[SUCCESS] Deployment complete!"
+          else
+            echo "[ERROR] Test failed. Response was:"
+            echo "$RESPONSE"
+            docker rm -f vendormanagerb_temp || true
+            exit 1
+          fi
+
+
+31
+    deploy:
+      name: Deploy to Server
+      runs-on: ubuntu-latest
+      needs: build   # <-- выполняется только если build прошёл успешно
+
+      steps:
+        - name: Connect via SSH and Deploy
+          uses: appleboy/ssh-action@v1.2.0
+          with:
+            host: ${{ secrets.SERVER_IP }}
+            username: ${{ secrets.SERVER_USER }}
+            key: ${{ secrets.SERVER_SSH_KEY }}
+            port: 22
+            script: |
+              echo "[INFO] Logging into GHCR..."
+              echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+              echo "[INFO] Pulling latest image..."
+              docker pull ghcr.io/${{ github.repository_owner }}/vendormanagerb:latest
+
+              echo "[INFO] Starting new container on port 3001 for testing..."
+              docker run -d --name vendormanagerb_temp -p 3001:3000 ghcr.io/${{ github.repository_owner }}/vendormanagerb:latest
+
+              echo "[INFO] Waiting for app to initialize..."
+              sleep 8
+
+              echo "[INFO] Sending test request..."
+              RESPONSE=$(curl -s http://localhost:3001/test || echo "fail")
+
+              if echo "$RESPONSE" | grep -q '"status"\s*:\s*"success"'; then
+                echo "[INFO] Test passed. Replacing old container..."
+
+                docker stop vendormanagerb_old || true
+                docker rm vendormanagerb_old || true
+
+                echo "[INFO] Restarting new container on port 3000..."
+                docker stop vendormanagerb_temp || true
+                docker rm vendormanagerb_temp || true
+                docker run -d --name vendormanagerb_old -p 3000:3000 ghcr.io/${{ github.repository_owner }}/vendormanagerb:latest
+
+                echo "[SUCCESS] Deployment complete!"
+              else
+                echo "[ERROR] Test failed. Response was:"
+                echo "$RESPONSE"
+                docker rm -f vendormanagerb_temp || true
+                exit 1
+              fi

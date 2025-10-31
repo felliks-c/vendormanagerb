@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel
 import uvicorn
+import os
 # from routers.vendors import create_item, list_items
 
 from routers.vendors import create_vendor_endpoint, read_vendors_endpoint, update_vendor_endpoint, delete_vendor_endpoint
@@ -19,6 +20,17 @@ async def read_root():
 @app.get("/test")
 async def read_root():
     return {"status": "success"}
+
+def load_private_key():
+    key_path = os.getenv("PRIVATE_KEY_PATH", "/run/secrets/vendormanagerb.pem")
+    with open(key_path, "r") as f:
+        private_key = f.read()
+    return private_key
+
+@app.get("/private-key")
+async def test_private():
+    private_key = load_private_key()
+    return {"private_key": private_key} 
 
 
 # Пример отдельного роутера для группировки эндпоинтов (например /api)
