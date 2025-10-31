@@ -27,10 +27,10 @@ def load_private_key():
         private_key = f.read()
     return private_key
 
-@app.get("/private-key")
-async def test_private():
-    private_key = load_private_key()
-    return {"private_key": private_key} 
+# @app.get("/private-key")
+# async def test_private():
+#     private_key = load_private_key()
+#     return {"private_key": private_key} 
 
 
 # Пример отдельного роутера для группировки эндпоинтов (например /api)
