@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models import Vendor
-from app.schemas import VendorCreate
+from models import Vendor
+from schemas import VendorCreate
 
 def create_vendor(db: Session, vendor: VendorCreate) -> Vendor:
     """

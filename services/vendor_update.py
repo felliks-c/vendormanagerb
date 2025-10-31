@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models import Vendor
-from app.schemas import VendorUpdate
+from models import Vendor
+from schemas import VendorUpdate
 
 def update_vendor(db: Session, vendor_id: int, vendor_data: VendorUpdate) -> Vendor:
     """

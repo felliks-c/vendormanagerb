@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session 
-from app.models import Vendor
-from app.schemas import Vendor
+from models import Vendor
+from schemas import Vendor
 
 def get_vendors(db: Session, skip: int = 0, limit: int = 100) -> list[Vendor]:
     """

@@ -5,9 +5,9 @@ import asyncio
 
 # Импорт вашей конфигурации:
 #from database import get_db # Предполагаем, что database.py на один уровень выше
-from app.schemas import Vendor, VendorCreate, VendorUpdate, VendorBase
+from schemas import Vendor, VendorCreate, VendorUpdate, VendorBase
 # Импорт функций CRUD из вашего модуля vendors
-from app.services import create_vendor, get_vendors, update_vendor, delete_vendor 
+from services import create_vendor, get_vendors, update_vendor, delete_vendor 
 # Также нужен импорт модели, если вы хотите искать по ней, но здесь он не обязателен
 # from .. import models 
 

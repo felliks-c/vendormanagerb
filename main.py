@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import uvicorn
 # from routers.vendors import create_item, list_items
 
-from app.routers.vendors import create_vendor_endpoint, read_vendors_endpoint, update_vendor_endpoint, delete_vendor_endpoint
+from routers.vendors import create_vendor_endpoint, read_vendors_endpoint, update_vendor_endpoint, delete_vendor_endpoint
 
 # app/main.py
 # Базовая структура FastAPI-приложения, куда можно добавлять маршруты (роуты).
