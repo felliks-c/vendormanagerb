@@ -1,7 +1,7 @@
-from .vendor_create import create_vendor
-from .vendor_read import get_vendors
-from .vendor_update import update_vendor
-from .vendor_delete import delete_vendor
+from .create_vendor import create_vendor
+from .get_vendors import get_vendors
+from .update_vendor import update_vendor
+from .delete_vendor import delete_vendor
 
 __all__ = [
     "create_vendor",
