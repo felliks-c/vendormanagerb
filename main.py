@@ -1,9 +1,20 @@
 from fastapi import FastAPI
 import uvicorn
 from routers.vendors import router as vendors_router
+from database import engine, Base
+from contextlib import asynccontextmanager
 
 
-app = FastAPI(title="Vendor Manager", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield  # тут запускается всё остальное приложение
+    # если нужно — тут можно добавить teardown
+
+
+
+app = FastAPI(title="Vendor Manager", version="0.1.0", lifespan=lifespan)
 
 # Корневой маршрут
 @app.get("/")
