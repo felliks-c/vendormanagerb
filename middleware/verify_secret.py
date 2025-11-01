@@ -5,7 +5,11 @@ from django.http import JsonResponse
 # app/middleware/verify_secret.py
 # Django middleware: проверяет заголовок API_SHARED_SECRET в каждом запросе
 
-
+def load_private_key():
+    key_path = os.getenv("PRIVATE_KEY_PATH", "/run/secrets/vendormanagerb.pem")
+    with open(key_path, "r") as f:
+        private_key = f.read()
+    return private_key
 
 class VerifySecretMiddleware:
     """
