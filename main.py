@@ -2,12 +2,7 @@ from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel
 import uvicorn
 import os
-# from routers.vendors import create_item, list_items
-
-from routers.vendors import create_vendor_endpoint, read_vendors_endpoint, update_vendor_endpoint, delete_vendor_endpoint
-
-# app/main.py
-# Базовая структура FastAPI-приложения, куда можно добавлять маршруты (роуты).
+from routers.vendors import router as vendors_router
 
 
 app = FastAPI(title="Vendor Manager", version="0.1.0")
@@ -27,21 +22,9 @@ def load_private_key():
         private_key = f.read()
     return private_key
 
-# @app.get("/private-key")
-# async def test_private():
-#     private_key = load_private_key()
-#     return {"private_key": private_key} 
-
-
-# Пример отдельного роутера для группировки эндпоинтов (например /api)
-api_router = APIRouter(prefix="/api", tags=["api"])
-
-
-
-
 
 # Подключаем роутер к приложению
-app.include_router(api_router)
+app.include_router(vendors_router)
 
 
 # Пример как подключать роутеры из других модулей:

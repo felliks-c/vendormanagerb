@@ -2,23 +2,30 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import asyncio
-
-# Импорт вашей конфигурации:
-#from database import get_db # Предполагаем, что database.py на один уровень выше
 from schemas import Vendor, VendorCreate, VendorUpdate, VendorBase
-# Импорт функций CRUD из вашего модуля vendors
 from services import create_vendor, get_vendors, update_vendor, delete_vendor 
-# Также нужен импорт модели, если вы хотите искать по ней, но здесь он не обязателен
-# from .. import models 
 
-# Создаем роутер с префиксом и тегами
 router = APIRouter(
     prefix="/vendors",
     tags=["Vendors"],
 )
 
+
+
 # ==============================================================================
-# 1. POST /vendors/ (CREATE) - Создание нового поставщика
+# 1. GET /vendors/ (READ ALL) - Получение списка поставщиков
+# ==============================================================================
+@router.get("/", response_model=List[Vendor])
+def read_vendors_endpoint(skip: int = 0, limit: int = 100):
+    """
+    Возвращает список всех поставщиков с пагинацией.
+    """
+    return get_vendors(db, skip=skip, limit=limit)
+
+
+
+# ==============================================================================
+# 2. POST /vendors/ (CREATE) - Создание нового поставщика
 # ==============================================================================
 @router.post("/", response_model=Vendor, status_code=status.HTTP_201_CREATED)
 async def create_vendor_endpoint(vendor: VendorCreate):
@@ -37,15 +44,6 @@ async def create_vendor_endpoint(vendor: VendorCreate):
         
     return await create_vendor(db=db, vendor=vendor)
 
-# ==============================================================================
-# 2. GET /vendors/ (READ ALL) - Получение списка поставщиков
-# ==============================================================================
-@router.get("/", response_model=List[Vendor])
-def read_vendors_endpoint(skip: int = 0, limit: int = 100):
-    """
-    Возвращает список всех поставщиков с пагинацией.
-    """
-    return get_vendors(db, skip=skip, limit=limit)
 
 # ==============================================================================
 # 3. PUT /vendors/{vendor_id} (UPDATE) - Обновление данных поставщика
