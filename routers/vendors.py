@@ -1,92 +1,103 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from typing import List, Optional
-import asyncio
-from schemas import Vendor, VendorCreate, VendorUpdate, VendorBase
-from services import create_vendor, get_vendors, update_vendor, delete_vendor 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional, Dict, Any, List
 
+from services import (
+    create_vendor,
+    update_vendor,
+    delete_vendor,
+    get_vendors,
+    search_vendors
+)
+from schemas import (
+    VendorCreate,
+    VendorUpdate,
+    VendorDelete,
+    VendorResponse
+)
+from database import get_db
+
+# ---------- Router ----------
 router = APIRouter(
     prefix="/vendors",
     tags=["Vendors"],
 )
 
+# ---------- Создание ----------
+@router.post("/", response_model=VendorResponse)
+async def create_vendor_route(vendor: VendorCreate, db: AsyncSession = Depends(get_db)):
+    try:
+        new_vendor = await create_vendor(db, vendor)
+        return new_vendor
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
+# ---------- Обновление ----------
+@router.put("/", response_model=VendorResponse)
+async def update_vendor_route(vendor: VendorUpdate, db: AsyncSession = Depends(get_db)):
+    try:
+        updated_vendor = await update_vendor(db, vendor)
+        return updated_vendor
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
-# ==============================================================================
-# 1. GET /vendors/ (READ ALL) - Получение списка поставщиков
-# ==============================================================================
-@router.get("/", response_model=List[Vendor])
-def read_vendors_endpoint(skip: int = 0, limit: int = 100):
-    """
-    Возвращает список всех поставщиков с пагинацией.
-    """
-    return get_vendors(db, skip=skip, limit=limit)
+# ---------- Удаление ----------
+@router.delete("/", response_model=Dict[str, str])
+async def delete_vendor_route(vendor: VendorDelete, db: AsyncSession = Depends(get_db)):
+    try:
+        result = await delete_vendor(db, vendor)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
+# ---------- Получение с фильтрацией ----------
+@router.get("/", response_model=List[VendorResponse])
+async def get_vendors_route(
+    name: Optional[str] = None,
+    contactEmail: Optional[str] = None,
+    category: Optional[str] = None,
+    rating: Optional[float] = None,
+    id: Optional[int] = None,
+    limit: int = Query(100, ge=1),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db)
+):
+    filters: Dict[str, Any] = {}
+    if id is not None:
+        filters["id"] = id
+    if name:
+        filters["name"] = name
+    if contactEmail:
+        filters["contactEmail"] = contactEmail
+    if category:
+        filters["category"] = category
+    if rating is not None:
+        filters["rating"] = rating
 
+    vendors = await get_vendors(db, filters=filters, limit=limit, offset=offset)
+    return vendors
 
-# ==============================================================================
-# 2. POST /vendors/ (CREATE) - Создание нового поставщика
-# ==============================================================================
-@router.post("/", response_model=Vendor, status_code=status.HTTP_201_CREATED)
-async def create_vendor_endpoint(vendor: VendorCreate):
-    """
-    Создает нового поставщика в базе данных.
-    """
-    # Дополнительная проверка, если нужно убедиться, что email уникален
-    # existing_vendor = db.query(models.Vendor).filter(models.Vendor.contactEmail == vendor.contactEmail).first()
-    # if existing_vendor:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST, 
-    #         detail="Email already registered"
-    #     )
+# ---------- Топ-10 поиск по частичным совпадениям ----------
+@router.get("/search", response_model=List[VendorResponse])
+async def search_vendors_route(
+    name: Optional[str] = None,
+    contactEmail: Optional[str] = None,
+    category: Optional[str] = None,
+    rating: Optional[str] = None,  # даже числа можно искать как строку
+    id: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    search_terms: Dict[str, str] = {}
+    if id:
+        search_terms["id"] = id
+    if name:
+        search_terms["name"] = name
+    if contactEmail:
+        search_terms["contactEmail"] = contactEmail
+    if category:
+        search_terms["category"] = category
+    if rating:
+        search_terms["rating"] = rating
 
-    
-        
-    return await create_vendor(db=db, vendor=vendor)
-
-
-# ==============================================================================
-# 3. PUT /vendors/{vendor_id} (UPDATE) - Обновление данных поставщика
-# ==============================================================================
-@router.put("/{vendor_id}", response_model=Vendor)
-def update_vendor_endpoint(vendor_id: int, vendor_data: VendorUpdate):
-    """
-    Обновляет данные поставщика по его ID.
-    """
-    # Проверяем, что есть хоть какие-то данные для обновления
-    if not vendor_data.dict(exclude_unset=True):
-         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="No fields provided for update"
-        )
-        
-    updated_vendor = update_vendor(db=db, vendor_id=vendor_id, vendor_data=vendor_data)
-    
-    if updated_vendor is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail=f"Vendor with id {vendor_id} not found"
-        )
-        
-    return updated_vendor
-
-# ==============================================================================
-# 4. DELETE /vendors/{vendor_id} (DELETE) - Удаление поставщика
-# ==============================================================================
-@router.delete("/{vendor_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_vendor_endpoint(vendor_id: int):
-    """
-    Удаляет поставщика по его ID.
-    """
-    deleted_vendor = delete_vendor(vendor_id)
-    
-    if deleted_vendor is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail=f"Vendor with id {vendor_id} not found"
-        )
-        
-    # Возвращаем пустой ответ с кодом 204 (No Content), т.к. объект удален
-    return
-
-# ==============================================================================
+    vendors = await search_vendors(db, search_terms=search_terms)
+    return vendors
