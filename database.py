@@ -1,29 +1,30 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from typing import AsyncGenerator
 
-# 1. Строка подключения
-SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+# 1. Строка подключения для SQLite (асинхронная)
+SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./sql_app.db"
 
-# 2. Создание движка (Engine)
-# 'connect_args={"check_same_thread": False}' нужен только для SQLite, 
-# чтобы позволить нескольким потокам обрабатывать запросы. 
-# SQLite по умолчанию разрешает только одному потоку взаимодействовать.
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+# 2. Создание асинхронного движка
+engine = create_async_engine(
+    SQLALCHEMY_DATABASE_URL,
+    echo=True,  # можно включить для логирования всех SQL-запросов
+    future=True
 )
 
-# 3. Создание фабрики сессий (SessionLocal)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# 3. Создание фабрики сессий
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    expire_on_commit=False,
+    class_=AsyncSession,
+    autoflush=False,
+    autocommit=False
+)
 
-# 4. Базовый класс для моделей (Base)
+# 4. Базовый класс для моделей
 Base = declarative_base()
 
-# В вашем FastAPI роутере или зависимостях (dependencies) вы будете использовать 
-# SessionLocal для создания сессий, например, так:
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
+# 5. Dependency для FastAPI
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        yield session
